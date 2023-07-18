@@ -4,6 +4,7 @@ import com.azure.data.tables.TableClient;
 import com.azure.data.tables.TableServiceClient;
 import com.azure.data.tables.TableServiceClientBuilder;
 import com.azure.data.tables.models.TableEntity;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.annotation.BindingName;
 import com.microsoft.azure.functions.annotation.Cardinality;
@@ -20,6 +21,7 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -96,14 +98,16 @@ public class FdrReEventToDataStore {
     		@BindingName(value = "PropertiesArray") Map<String, Object>[] properties,
             final ExecutionContext context) {
 
+		Logger logger = context.getLogger();
+
 		MongoDatabase database = getMongoClient().getDatabase(System.getenv("COSMOS_DB_NAME"));
 		MongoCollection<Document> collection = database.getCollection(System.getenv("COSMOS_DB_COLLECTION_NAME"));
 
-        Logger logger = context.getLogger();
-
 		TableClient tableClient = getTableServiceClient().getTableClient(tableName);
+
 		String msg = String.format("Persisting %d events",reEvents.size());
 		logger.info(msg);
+
         try {
         	if (reEvents.size() == properties.length) {
 				for(int index=0;index< properties.length;index++){
@@ -113,6 +117,11 @@ public class FdrReEventToDataStore {
 						String s = replaceDashWithUppercase(p);
 						reEvent.put(s,v);
 					});
+					for(Map.Entry<String, Object> entry: reEvent.entrySet()){
+						if(entry.getValue() instanceof Map){
+							reEvent.put(entry.getKey(),ObjectMapperUtils.writeValueAsString(entry.getValue()));
+						}
+					}
 					reEvent.put("timestamp",ZonedDateTime.now().toInstant().toEpochMilli());
 					toTableStorage(logger,tableClient,reEvent);
 					collection.insertOne(new Document(reEvent));
@@ -121,7 +130,7 @@ public class FdrReEventToDataStore {
             } else {
 				logger.severe("Error processing events, lengths do not match ["+reEvents.size()+","+properties.length+"]");
             }
-        } catch (NullPointerException e) {
+		} catch (NullPointerException e) {
             logger.severe("NullPointerException exception on cosmos fdr-re-events msg ingestion at "+ LocalDateTime.now()+ " : " + e.getMessage());
         } catch (Exception e) {
             logger.severe("Generic exception on cosmos fdr-re-events msg ingestion at "+ LocalDateTime.now()+ " : " + e.getMessage());
