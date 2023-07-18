@@ -60,12 +60,17 @@ public class FdrReEventToDataStore {
 	}
 
 
-	private void toTableStorage(Logger logger,TableClient tableClient,Map<String,Object> reEvent){
+	private void toTableStorage(Logger logger,TableClient tableClient,Map<String,Object> reEvent) throws JsonProcessingException {
 		if(reEvent.get(partitionKey) == null){
 			logger.warning("event has no '"+partitionKey+"' field");
 		}else if(reEvent.get(idField) == null) {
 			logger.warning("event has no '"+idField+"' field");
 		}else{
+			for(Map.Entry<String, Object> entry: reEvent.entrySet()){
+				if(entry.getValue() instanceof Map){
+					reEvent.put(entry.getKey(),ObjectMapperUtils.writeValueAsString(entry.getValue()));
+				}
+			}
 			TableEntity entity = new TableEntity(((String)reEvent.get(partitionKey)).substring(0,10), (String)reEvent.get(idField));
 			entity.setProperties(reEvent);
 			tableClient.createEntity(entity);
@@ -117,11 +122,6 @@ public class FdrReEventToDataStore {
 						String s = replaceDashWithUppercase(p);
 						reEvent.put(s,v);
 					});
-					for(Map.Entry<String, Object> entry: reEvent.entrySet()){
-						if(entry.getValue() instanceof Map){
-							reEvent.put(entry.getKey(),ObjectMapperUtils.writeValueAsString(entry.getValue()));
-						}
-					}
 					reEvent.put("timestamp",ZonedDateTime.now().toInstant().toEpochMilli());
 					toTableStorage(logger,tableClient,reEvent);
 					collection.insertOne(new Document(reEvent));
