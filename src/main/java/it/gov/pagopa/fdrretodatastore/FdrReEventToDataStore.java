@@ -19,6 +19,7 @@ import org.bson.Document;
 
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -123,8 +124,10 @@ public class FdrReEventToDataStore {
 						reEvent.put(s,v);
 					});
 					reEvent.put("timestamp",ZonedDateTime.now().toInstant().toEpochMilli());
-					toTableStorage(logger,tableClient,reEvent);
+
+					toTableStorage(logger,tableClient,new LinkedHashMap<>(reEvent));
 					collection.insertOne(new Document(reEvent));
+
 				}
 				logger.info("Done processing events");
             } else {

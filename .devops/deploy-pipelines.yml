@@ -36,7 +36,7 @@ variables:
     AZURE_SUBSCRIPTION: $(DEV_AZURE_SUBSCRIPTION)
     APP_NAME: $(DEV_WEB_APP_NAME)
     STAGE: "d"
-    RESOURCE_GROUP: 'pagopa-d-weu-fdr-re-to-datastore-rg'
+    RESOURCE_GROUP: 'pagopa-d-weu-fdr-re-rg'
     dockerRegistryServiceConnection: $(DEV_CONTAINER_REGISTRY_SERVICE_CONN)
     dockerNamespace: $(DEV_CONTAINER_NAMESPACE)
   ${{ if eq(parameters['ENV'], 'uat') }}:
@@ -116,8 +116,8 @@ stages:
           - checkout: self
             persistCredentials: true
 
-          - script: |
-              git checkout $(sourceBranch)
+          #- script: |
+          #    git checkout $(sourceBranch)
 
           - task: Maven@3
             inputs:
