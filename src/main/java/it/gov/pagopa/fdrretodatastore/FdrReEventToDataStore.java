@@ -38,7 +38,8 @@ public class FdrReEventToDataStore {
 	private Pattern replaceDashPattern = Pattern.compile("-([a-zA-Z])");
 	private static String idField = "uniqueId";
 	private static String tableName = System.getenv("TABLE_STORAGE_TABLE_NAME");
-	private static String partitionKey = "created";
+	private static String columnCreated = "created";
+	private static String partitionKeyColumnCreated = "PartitionKey";
 
 	private static MongoClient mongoClient = null;
 
@@ -62,20 +63,14 @@ public class FdrReEventToDataStore {
 
 
 	private void toTableStorage(Logger logger,TableClient tableClient,Map<String,Object> reEvent) throws JsonProcessingException {
-		if(reEvent.get(partitionKey) == null){
-			logger.warning("event has no '"+partitionKey+"' field");
-		}else if(reEvent.get(idField) == null) {
-			logger.warning("event has no '"+idField+"' field");
-		}else{
-			for(Map.Entry<String, Object> entry: reEvent.entrySet()){
-				if(entry.getValue() instanceof Map){
-					reEvent.put(entry.getKey(),ObjectMapperUtils.writeValueAsString(entry.getValue()));
-				}
+		for(Map.Entry<String, Object> entry: reEvent.entrySet()){
+			if(entry.getValue() instanceof Map){
+				reEvent.put(entry.getKey(),ObjectMapperUtils.writeValueAsString(entry.getValue()));
 			}
-			TableEntity entity = new TableEntity(((String)reEvent.get(partitionKey)).substring(0,10), (String)reEvent.get(idField));
-			entity.setProperties(reEvent);
-			tableClient.createEntity(entity);
 		}
+		TableEntity entity = new TableEntity((String)reEvent.get(partitionKeyColumnCreated), (String)reEvent.get(idField));
+		entity.setProperties(reEvent);
+		tableClient.createEntity(entity);
 	}
 
 	private String replaceDashWithUppercase(String input) {
@@ -119,6 +114,8 @@ public class FdrReEventToDataStore {
 				for(int index=0;index< properties.length;index++){
 					logger.info("processing "+(index+1)+" of "+properties.length);
 					final Map<String,Object> reEvent = ObjectMapperUtils.readValue(reEvents.get(index), Map.class);
+					String partitionKey = ((String)reEvent.get(columnCreated)).substring(0,10);
+					reEvent.put(partitionKeyColumnCreated,partitionKey);
 					properties[index].forEach((p,v)->{
 						String s = replaceDashWithUppercase(p);
 						reEvent.put(s,v);
