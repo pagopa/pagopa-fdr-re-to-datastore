@@ -100,7 +100,7 @@ public class FdrReEventToDataStore {
                     eventHubName = "", // blank because the value is included in the connection string
                     connection = "EVENTHUB_CONN_STRING",
                     cardinality = Cardinality.MANY)
-    		List<String> reEvents,
+    		List<Map<String,Object>> reEvents,
     		@BindingName(value = "PropertiesArray") Map<String, Object>[] properties,
             final ExecutionContext context) {
 
@@ -118,7 +118,8 @@ public class FdrReEventToDataStore {
         	if (reEvents.size() == properties.length) {
 				for(int index=0;index< properties.length;index++){
 					logger.info("processing "+(index+1)+" of "+properties.length);
-					final Map<String,Object> reEvent = ObjectMapperUtils.readValue(reEvents.get(index), Map.class);
+//					final Map<String,Object> reEvent = ObjectMapperUtils.readValue(reEvents.get(index), Map.class);
+					final Map<String,Object> reEvent = reEvents.get(index);
 					properties[index].forEach((p,v)->{
 						String s = replaceDashWithUppercase(p);
 						reEvent.put(s,v);
