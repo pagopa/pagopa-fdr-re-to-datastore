@@ -119,7 +119,7 @@ public class FdrReEventToDataStore {
 					final ReEvent reEvent = reEvents.get(index);
 					Map<String, Object> reEventMap = om.convertValue(reEvent, new TypeReference<Map<String, Object>>() {
 					});
-					String partitionKey = reEvent.getCreated().toString().substring(0,10);
+					String partitionKey = reEvent.getCreated().substring(0,10);
 					reEventMap.put(partitionKeyColumnCreated,partitionKey);
 					properties[index].forEach((p,v)->{
 						String s = replaceDashWithUppercase(p);
