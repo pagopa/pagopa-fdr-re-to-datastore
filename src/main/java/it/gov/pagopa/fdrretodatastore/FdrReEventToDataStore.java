@@ -46,6 +46,8 @@ public class FdrReEventToDataStore {
 
 	private static TableServiceClient tableServiceClient = null;
 
+	private ObjectMapper om = new ObjectMapper();
+
 	private static MongoClient getMongoClient(){
 		if(mongoClient==null){
 			mongoClient = new MongoClient(new MongoClientURI(System.getenv("COSMOS_CONN_STRING")));
@@ -115,7 +117,7 @@ public class FdrReEventToDataStore {
 				for(int index=0;index< properties.length;index++){
 					logger.info("processing "+(index+1)+" of "+properties.length);
 					final ReEvent reEvent = reEvents.get(index);
-					Map<String, Object> reEventMap = new ObjectMapper().convertValue(reEvent, new TypeReference<Map<String, Object>>() {
+					Map<String, Object> reEventMap = om.convertValue(reEvent, new TypeReference<Map<String, Object>>() {
 					});
 					String partitionKey = reEvent.getCreated().toString().substring(0,10);
 					reEventMap.put(partitionKeyColumnCreated,partitionKey);
