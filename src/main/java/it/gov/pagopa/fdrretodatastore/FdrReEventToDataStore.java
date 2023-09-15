@@ -5,6 +5,8 @@ import com.azure.data.tables.TableServiceClient;
 import com.azure.data.tables.TableServiceClientBuilder;
 import com.azure.data.tables.models.TableEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.annotation.BindingName;
 import com.microsoft.azure.functions.annotation.Cardinality;
@@ -94,7 +96,7 @@ public class FdrReEventToDataStore {
                     eventHubName = "", // blank because the value is included in the connection string
                     connection = "EVENTHUB_CONN_STRING",
                     cardinality = Cardinality.MANY)
-    		List<Map<String,Object>> reEvents,
+    		List<ReEvent> reEvents,
     		@BindingName(value = "PropertiesArray") Map<String, Object>[] properties,
             final ExecutionContext context) {
 
@@ -112,18 +114,19 @@ public class FdrReEventToDataStore {
         	if (reEvents.size() == properties.length) {
 				for(int index=0;index< properties.length;index++){
 					logger.info("processing "+(index+1)+" of "+properties.length);
-//					final Map<String,Object> reEvent = ObjectMapperUtils.readValue(reEvents.get(index), Map.class);
-					final Map<String,Object> reEvent = reEvents.get(index);
-					String partitionKey = reEvent.get(columnCreated).toString().substring(0,10);
-					reEvent.put(partitionKeyColumnCreated,partitionKey);
+					final ReEvent reEvent = reEvents.get(index);
+					Map<String, Object> reEventMap = new ObjectMapper().convertValue(reEvent, new TypeReference<Map<String, Object>>() {
+					});
+					String partitionKey = reEvent.getCreated().toString().substring(0,10);
+					reEventMap.put(partitionKeyColumnCreated,partitionKey);
 					properties[index].forEach((p,v)->{
 						String s = replaceDashWithUppercase(p);
-						reEvent.put(s,v);
+						reEventMap.put(s,v);
 					});
-					reEvent.put("timestamp",ZonedDateTime.now().toInstant().toEpochMilli());
+					reEventMap.put("timestamp",ZonedDateTime.now().toInstant().toEpochMilli());
 
-					toTableStorage(logger,tableClient,new LinkedHashMap<>(reEvent));
-					collection.insertOne(new Document(reEvent));
+					toTableStorage(logger,tableClient,new LinkedHashMap<>(reEventMap));
+					collection.insertOne(new Document(reEventMap));
 
 				}
 				logger.info("Done processing events");
