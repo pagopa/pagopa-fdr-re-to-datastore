@@ -125,7 +125,9 @@ public class FdrReEventToDataStore {
 					Object servId = reEvent.get(serviceIdentifier);
 					String partitionKey = null;
 					if(servId.equals(serviceIDFdr001)){
-						partitionKey = LocalDateTime.parse(reEvent.get(columnCreated).toString()).atZone(ZoneId.of("Europe/Rome")).toInstant().toString().substring(0,10);
+						String utcCreated = LocalDateTime.parse(reEvent.get(columnCreated).toString()).atZone(ZoneId.of("Europe/Rome")).toInstant().toString();
+						partitionKey = utcCreated.substring(0,10);
+						reEvent.put(columnCreated,utcCreated);
 					}else{
 						partitionKey = reEvent.get(columnCreated).toString().substring(0,10);
 					}
