@@ -22,7 +22,6 @@ import java.time.ZonedDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -115,7 +114,7 @@ public class FdrReEventToDataStore {
 					logger.info("processing "+(index+1)+" of "+properties.length);
 //					final Map<String,Object> reEvent = ObjectMapperUtils.readValue(reEvents.get(index), Map.class);
 					final Map<String,Object> reEvent = reEvents.get(index);
-					String partitionKey = ((String)reEvent.get(columnCreated)).substring(0,10);
+					String partitionKey = reEvent.get(columnCreated).toString().substring(0,10);
 					reEvent.put(partitionKeyColumnCreated,partitionKey);
 					properties[index].forEach((p,v)->{
 						String s = replaceDashWithUppercase(p);
