@@ -5,6 +5,8 @@ import com.azure.data.tables.TableServiceClient;
 import com.azure.data.tables.TableServiceClientBuilder;
 import com.azure.data.tables.models.TableEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.annotation.BindingName;
 import com.microsoft.azure.functions.annotation.Cardinality;
@@ -18,11 +20,13 @@ import it.gov.pagopa.fdrretodatastore.util.ObjectMapperUtils;
 import org.bson.Document;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,10 +44,14 @@ public class FdrReEventToDataStore {
 	private static String tableName = System.getenv("TABLE_STORAGE_TABLE_NAME");
 	private static String columnCreated = "created";
 	private static String partitionKeyColumnCreated = "PartitionKey";
+	private static String serviceIdentifier = "serviceIdentifier";
+	private static String serviceIDFdr001 = "FDR001";
 
 	private static MongoClient mongoClient = null;
 
 	private static TableServiceClient tableServiceClient = null;
+
+	private ObjectMapper om = new ObjectMapper();
 
 	private static MongoClient getMongoClient(){
 		if(mongoClient==null){
@@ -114,14 +122,21 @@ public class FdrReEventToDataStore {
 				for(int index=0;index< properties.length;index++){
 					logger.info("processing "+(index+1)+" of "+properties.length);
 					final Map<String,Object> reEvent = ObjectMapperUtils.readValue(reEvents.get(index), Map.class);
-					String partitionKey = ((String)reEvent.get(columnCreated)).substring(0,10);
+					Object servId = reEvent.get(serviceIdentifier);
+					String partitionKey = null;
+					if(servId.equals(serviceIDFdr001)){
+						String utcCreated = LocalDateTime.parse(reEvent.get(columnCreated).toString()).atZone(ZoneId.of("Europe/Rome")).toInstant().toString();
+						partitionKey = utcCreated.substring(0,10);
+						reEvent.put(columnCreated,utcCreated);
+					}else{
+						partitionKey = reEvent.get(columnCreated).toString().substring(0,10);
+					}
 					reEvent.put(partitionKeyColumnCreated,partitionKey);
 					properties[index].forEach((p,v)->{
 						String s = replaceDashWithUppercase(p);
 						reEvent.put(s,v);
 					});
 					reEvent.put("timestamp",ZonedDateTime.now().toInstant().toEpochMilli());
-
 					toTableStorage(logger,tableClient,new LinkedHashMap<>(reEvent));
 					collection.insertOne(new Document(reEvent));
 
