@@ -37,4 +37,14 @@ hs_err_pid*
 local.settings.json
 bin/
 obj/
-/.identity/.terraform/
+
+local.settings.json
+**/*.iml
+/lib/
+**/.env
+bin/
+**/application-azure.properties
+.cache_ggshield
+*azure.properties
+**/node_modules
+**/.terraform/
