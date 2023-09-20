@@ -36,7 +36,7 @@ locals {
   repo_secrets = {
     "SONAR_TOKEN" : data.azurerm_key_vault_secret.key_vault_sonar.value,
     "BOT_TOKEN_GITHUB" : data.azurerm_key_vault_secret.key_vault_bot_token.value,
-#    "CUCUMBER_PUBLISH_TOKEN" : data.azurerm_key_vault_secret.key_vault_cucumber_token.value,
+    "SLACK_WEBHOOK_URL": data.azurerm_key_vault_secret.key_vault_slack_webhook_url.value
   }
 }
 
@@ -75,5 +75,28 @@ resource "github_actions_secret" "repo_secrets" {
   repository      = local.github.repository
   secret_name     = each.key
   plaintext_value = each.value
+}
+
+############
+## Labels ##
+############
+
+
+resource "github_issue_label" "breaking_change" {
+  repository = local.github.repository
+  name       = "breaking-change"
+  color      = "FF0000"
+}
+
+resource "github_issue_label" "new_release" {
+  repository = local.github.repository
+  name       = "new-release"
+  color      = "FFFF00"
+}
+
+resource "github_issue_label" "ignore_for_release" {
+  repository = local.github.repository
+  name       = "ignore-for-release"
+  color      = "008000"
 }
 
