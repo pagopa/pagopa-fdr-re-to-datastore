@@ -5,7 +5,7 @@ locals {
   }
 
   prefix         = "pagopa"
-  domain         = "nodo"
+  domain         = "fdr"
   location_short = "weu"
   product        = "${var.prefix}-${var.env_short}"
 
