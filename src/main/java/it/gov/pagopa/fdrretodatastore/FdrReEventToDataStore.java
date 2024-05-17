@@ -70,7 +70,7 @@ public class FdrReEventToDataStore {
 	}
 
 
-	private void toTableStorage(Logger logger,TableClient tableClient,Map<String,Object> reEvent) throws JsonProcessingException {
+	private void toTableStorage(TableClient tableClient,Map<String,Object> reEvent) throws JsonProcessingException {
 		for(Map.Entry<String, Object> entry: reEvent.entrySet()){
 			if(entry.getValue() instanceof Map){
 				reEvent.put(entry.getKey(),ObjectMapperUtils.writeValueAsString(entry.getValue()));
@@ -144,11 +144,11 @@ public class FdrReEventToDataStore {
 
 					logger.log(Level.INFO, () -> String.format("Performing event ingestion: InvocationId [%s], Retry Attempt [%d], Events: %s", context.getInvocationId(), retryIndex, reEvents));
 
-					toTableStorage(logger,tableClient,new LinkedHashMap<>(reEvent));
+					toTableStorage(tableClient,new LinkedHashMap<>(reEvent));
 					collection.insertOne(new Document(reEvent));
-
 				}
-				logger.info("Done processing events");
+
+				logger.log(Level.FINE, () -> "Done processing events");
             } else {
 				isPersistenceOk = false;
 				errorCause = String.format("[ALERT][FdrREToDS] AppException - Error processing events, lengths do not match: [events: %d - properties: %d]", reEvents.size(), properties.length);
