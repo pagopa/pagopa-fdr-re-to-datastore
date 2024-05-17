@@ -80,18 +80,10 @@ resource "github_actions_secret" "repo_secrets" {
 ############
 ## Labels ##
 ############
-
-
-resource "github_issue_label" "breaking_change" {
+resource "github_issue_label" "patch" {
   repository = local.github.repository
-  name       = "breaking-change"
+  name       = "patch"
   color      = "FF0000"
-}
-
-resource "github_issue_label" "new_release" {
-  repository = local.github.repository
-  name       = "new-release"
-  color      = "FFFF00"
 }
 
 resource "github_issue_label" "ignore_for_release" {
