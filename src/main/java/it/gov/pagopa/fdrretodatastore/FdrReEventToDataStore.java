@@ -39,7 +39,7 @@ public class FdrReEventToDataStore {
      * This function will be invoked when an Event Hub trigger occurs
      */
 
-	private static final Integer MAX_RETRY_COUNT = 5;
+	private static final Integer MAX_RETRY_COUNT = 10;
 
 	private Pattern replaceDashPattern = Pattern.compile("-([a-zA-Z])");
 	private static String idField = "uniqueId";
@@ -97,7 +97,7 @@ public class FdrReEventToDataStore {
 	}
 
     @FunctionName("EventHubFdrReEventProcessor")
-	@ExponentialBackoffRetry(maxRetryCount = 5, maximumInterval = "00:15:00", minimumInterval = "00:00:10")
+	@ExponentialBackoffRetry(maxRetryCount = 10, maximumInterval = "01:00:00", minimumInterval = "00:00:10")
 	public void processNodoReEvent (
             @EventHubTrigger(
                     name = "FdrReEvent",
