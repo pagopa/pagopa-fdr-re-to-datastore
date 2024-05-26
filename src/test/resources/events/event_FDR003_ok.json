@@ -1,0 +1,9 @@
+{
+  "serviceIdentifier": "FDR003",
+  "created": "%s",
+  "uniqueId": "%s",
+  "subEvent": {
+    "prop1": "1",
+    "prop2": "2"
+  }
+}
